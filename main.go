@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 type Book struct {
@@ -31,9 +34,11 @@ func populateBooks() {
 func handleRequests() {
 	fmt.Println("starting server...")
 
-	http.HandleFunc("/", homePage)
-	http.HandleFunc("/books", allBooks)
-	http.ListenAndServe(":8083", nil)
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/", homePage)
+	router.HandleFunc("/books", allBooks)
+	router.HandleFunc("/books/{key}", particularBook)
+	http.ListenAndServe(":8083", router)
 }
 
 func homePage(w http.ResponseWriter, r *http.Request) {
@@ -47,4 +52,13 @@ func allBooks(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(books)
 
+}
+
+func particularBook(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.URL, ": particularBook function called")
+
+	vars := mux.Vars(r)
+	key, _ := strconv.Atoi(vars["key"])
+
+	json.NewEncoder(w).Encode(books[key-1])
 }
